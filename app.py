@@ -152,7 +152,7 @@ def main():
         st.session_state.prediction_results = None
 
     st.set_page_config(
-        page_title="Oszacuj swoje miejsce w półmaratonie",
+        page_title="Prognoza czasu w półmaratonie",
         page_icon="🏃",
         layout="centered",
         initial_sidebar_state="collapsed",
