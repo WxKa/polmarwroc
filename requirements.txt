@@ -2,3 +2,4 @@ openai
 langfuse
 streamlit
 python-dotenv
+boto3
