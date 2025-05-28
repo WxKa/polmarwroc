@@ -261,7 +261,7 @@ def display_data_page():
         runner = st.session_state.runner_info
         html(st, f"""
             <div class="success-box">
-                <h6 style="margin-top: 0;">✅ ... no i co my tu mamy...</h6>
+                <h6 style="margin-top: 0;">✅ ... i co my tu mamy...</h6>
                 <table style="width: 100%; border-collapse: collapse;">
                     <tr>
                         <td style="padding: 0.5rem; font-weight: bold;">👤 Wiek:</td>
