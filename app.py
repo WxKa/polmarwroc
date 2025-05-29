@@ -142,14 +142,20 @@ def parse_user_input(text: str) -> RunnerInfo:
         raise
 
 def main():
-    if "user_input" not in st.session_state:
-        st.session_state.user_input = ""
-    if "runner_info" not in st.session_state:
-        st.session_state.runner_info = None
-    if "page" not in st.session_state:
-        st.session_state.page = "input"
-    if "prediction_results" not in st.session_state:
-        st.session_state.prediction_results = None
+    stss = st.session_state
+    if "history" not in stss:
+        stss.history = [
+            "Jestem 35-letnim mężczyzną, a mój czas na 5 km to 22:30.",
+            "Mam 28 lat, jestem kobietą a moje średnie tempo na 5 km to 4\"59'",
+            ""
+        ]
+        stss.hist_idx = len(stss.history)-1
+    if "runner_info" not in stss:
+        stss.runner_info = None
+    if "page" not in stss:
+        stss.page = "input"
+    if "prediction_results" not in stss:
+        stss.prediction_results = None
 
     st.set_page_config(
         page_title="Prognoza czasu w półmaratonie",
@@ -160,12 +166,24 @@ def main():
 
     html(st, utils_css.better_styling_css())
 
-    if st.session_state.page == "input":
+    if stss.page == "input":
         display_input_page()
-    elif st.session_state.page == "data":
+    elif stss.page == "data":
         display_data_page()
-    elif st.session_state.page == "results":
+    elif stss.page == "results":
         display_results_page()
+
+def save_input(user_input):
+    stss = st.session_state
+    if user_input != "":
+        if user_input != stss.history[stss.hist_idx]:
+            if user_input in stss.history:
+                stss.history.remove(user_input)
+            if stss.history[len(stss.history)-1] == "":
+                stss.history[len(stss.history)-1] = user_input
+            else:
+                stss.history.append(user_input)
+            stss.hist_idx = len(stss.history)-1
 
 def display_input_page():
     html(st, '<h1 class="main-header">🏃 Prognoza czasu w Półmaratonie Wrocławskim</h1>')
@@ -176,22 +194,58 @@ def display_input_page():
             <div class="highlight-box">
                 <p>Powiedz coś o sobie, ile masz lat, czy jesteś mężczyzną czy kobietą, jaki masz czas (lub jakie jest Twoje tempo) na 5 km.<br>
                 W razie wątpliwości skorzystaj z tabeli Tempo/Prędkość.<br>
-                Poniżej przykładowe odpowiedzi:</p>
-                <ul>
-                    <li>Jestem 35-letnim mężczyzną, a mój czas na 5 km to 22:30.</li>
-                    <li>Mam 28 lat, jestem kobietą a moje średnie tempo na 5 km to 4"59'</li>
-                </ul>
             </div>
         """)
 
+        stss = st.session_state
+
         user_input = st.text_area(
             "Opisz siebie i swój czas lub tempo na 5 km",
-            st.session_state.user_input,
+            stss.history[stss.hist_idx],
             height=120,
             label_visibility="collapsed",
         )
 
-        analyze_button = st.button("🔍 Dalej", key="analyze_btn", use_container_width=True)
+        col1, col2, col3, col4 = st.columns(4)
+
+        with col1:
+            if st.button(f"👈 poprzedni ({stss.hist_idx})"):
+                save_input(user_input)
+                if stss.hist_idx > 0:
+                    stss.hist_idx -= 1
+                    st.rerun()
+
+        with col2:
+            if st.button("☄️ wyczyść"):
+                if stss.history[len(stss.history)-1] != "":
+                    stss.history.append("")
+                stss.hist_idx = len(stss.history)-1
+                st.rerun()
+
+        with col3:
+            if st.button("❌ usuń"):
+                if len(stss.history) > 1:
+                    del stss.history[stss.hist_idx]
+                    if stss.hist_idx >= len(stss.history):
+                        stss.hist_idx -= 1
+                st.rerun()
+
+        with col4:
+            if st.button(f"👉 następny ({len(stss.history)-stss.hist_idx-1})"):
+                save_input(user_input)
+                if stss.hist_idx < len(stss.history) - 1:
+                    stss.hist_idx += 1
+                    st.rerun()
+
+        if st.button("🏁 Dalej", key="analyze_btn", use_container_width=True):
+            save_input(user_input)
+            try:
+                st.session_state.runner_info = parse_user_input(user_input)
+                st.session_state.page = "data"
+                st.rerun()
+            except Exception as e:
+                html(st, f'<div class="warning-box">❌ Nie udało się przeanalizować danych: {str(e)}</div>')
+
     with tab2:
         html(st, """
             <table>
@@ -245,15 +299,6 @@ def display_input_page():
                 </tr>
             </table>
         """)
-
-    if analyze_button:
-        try:
-            st.session_state.runner_info = parse_user_input(user_input)
-            st.session_state.user_input = user_input
-            st.session_state.page = "data"
-            st.rerun()
-        except Exception as e:
-            html(st, f'<div class="warning-box">❌ Nie udało się przeanalizować danych: {str(e)}</div>')
 
 def display_data_page():
 
