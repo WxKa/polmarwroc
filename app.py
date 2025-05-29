@@ -143,7 +143,7 @@ def parse_user_input(text: str) -> RunnerInfo:
 
 def main():
     if "user_input" not in st.session_state:
-        st.session_state.user_input = "Jestem 28-letnią kobietą, a moje średnie tempo na 5 km to 4\"17'."
+        st.session_state.user_input = ""
     if "runner_info" not in st.session_state:
         st.session_state.runner_info = None
     if "page" not in st.session_state:
